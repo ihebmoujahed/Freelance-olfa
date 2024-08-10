@@ -1,0 +1,23 @@
+
+
+.sidebar {
+  height: 100vh;
+  padding: 10px;
+  background-color: #f8f9fa;
+}
+
+.content {
+  padding: 20px;
+}
+
+.sidebar .nav-link {
+  color: #000;
+}
+
+.sidebar .nav-link:hover {
+  color: #007bff;
+}
+
+.navbar-nav .nav-link {
+  margin-right: auto; /* Ensure the navbar items align to the right */
+}

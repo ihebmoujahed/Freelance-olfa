@@ -1,6 +1,7 @@
-import { Container, Row, Col } from "react-bootstrap";
-import { useState } from "react";
-import { useHistory } from "react-router-dom"; // Import useHistory
+import React, { useState } from "react";
+import { useHistory } from "react-router-dom";
+import "./Newstd.css"; // Import custom CSS
+
 function Newstd() {
   const [formData, setFormData] = useState({
     nom: "",
@@ -9,9 +10,12 @@ function Newstd() {
     cardid: "",
   });
   const [submitSuccess, setSubmitSuccess] = useState(false); // State to track success
+  const [isSubmitting, setIsSubmitting] = useState(false); // State to track submission status
   const history = useHistory(); // Initialize useHistory hook
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true); // Disable the button
 
     try {
       const response = await fetch("http://localhost:3001/addStudent", {
@@ -25,12 +29,16 @@ function Newstd() {
       if (response.ok) {
         console.log("Data inserted successfully");
         setSubmitSuccess(true); // Set success state to true
-        history.push("/List/Std"); 
+        setTimeout(() => {
+          history.push("/List/Std");
+        }, 2000); // Redirect after 2 seconds
       } else {
         console.error("Failed to insert data");
+        setIsSubmitting(false); // Re-enable the button if submission fails
       }
     } catch (error) {
       console.error("Error inserting data:", error);
+      setIsSubmitting(false); // Re-enable the button if an error occurs
     }
   };
 
@@ -42,45 +50,54 @@ function Newstd() {
   };
 
   return (
-    <div style={{ direction: "rtl" }}>
+    <div className="newstd-container">
       {submitSuccess && (
-          <div className="alert alert-success d-flex align-items-center" role="alert">
-            <svg className="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Success:"><use xlinkHref="#check-circle-fill"/></svg>
-            <div>
-              تم إضافة البيانات بنجاح
-            </div>
-          </div>
-        )}
+        <div className="alert alert-success" role="alert">
+          <svg
+            className="bi flex-shrink-0 me-2"
+            width="24"
+            height="24"
+            role="img"
+            aria-label="Success:"
+          >
+            <use xlinkHref="#check-circle-fill" />
+          </svg>
+          <div>تم إضافة البيانات بنجاح</div>
+        </div>
+      )}
+
       <h1>التسجيل</h1>
-      <hr />
+      <hr className="divider" />
 
       <form onSubmit={handleSubmit}>
-        <div className="form-row">
-          <div className="form-group col-md-6">
-            <label htmlFor="inputName">الاسم</label>
-            <input
-              type="text"
-              className="form-control"
-              id="nom"
-              placeholder="الاسم"
-              value={formData.nom}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group col-md-6">
-            <label htmlFor="inputLastName">اللقب</label>
-            <input
-              type="text"
-              className="form-control"
-              id="prenom"
-              placeholder="اللقب"
-              value={formData.prenom}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
         <div className="form-group">
-          <label htmlFor="inputPhone">الهاتف</label>
+          <label htmlFor="nom">الاسم</label>
+          <input
+            type="text"
+            className="form-control"
+            id="nom"
+            placeholder="الاسم"
+            value={formData.nom}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="prenom">اللقب</label>
+          <input
+            type="text"
+            className="form-control"
+            id="prenom"
+            placeholder="اللقب"
+            value={formData.prenom}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="numerotlfparent">الهاتف</label>
           <input
             type="number"
             className="form-control"
@@ -88,10 +105,12 @@ function Newstd() {
             placeholder="الهاتف"
             value={formData.numerotlfparent}
             onChange={handleChange}
+            required
           />
         </div>
+
         <div className="form-group">
-          <label htmlFor="inputCardId">رقم البطاقة الوطنية</label>
+          <label htmlFor="cardid">رقم البطاقة الوطنية</label>
           <input
             type="text"
             className="form-control"
@@ -99,19 +118,17 @@ function Newstd() {
             placeholder="رقم البطاقة الوطنية"
             value={formData.cardid}
             onChange={handleChange}
+            required
           />
         </div>
 
         <button
           type="submit"
-          className="btn btn-primary"
-          style={{ marginTop: "22px" }}
+          className="btn btn-primary btn-block"
+          disabled={isSubmitting} // Disable the button when submitting
         >
-          تسجيل
+          {isSubmitting ? "جاري التسجيل..." : "تسجيل"} {/* Show loading text */}
         </button>
-
-        {/* Conditional rendering of success message */}
-        
       </form>
     </div>
   );

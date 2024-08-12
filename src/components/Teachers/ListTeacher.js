@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function ListTeacher() {
   const [teachers, setTeachers] = useState([]);
@@ -11,12 +12,11 @@ function ListTeacher() {
     axios
       .get("http://localhost:3001/getTeacher")
       .then((response) => {
-        // Assuming response.data is an array of teachers
         setTeachers(response.data.rows);
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
-        setTeachers([]); // Set teachers to an empty array on error
+        setTeachers([]);
       });
   }, []);
 
@@ -25,12 +25,10 @@ function ListTeacher() {
     setCurrentPage(1); // Reset to first page on search
   };
 
-  // Filter teachers based on the search query
   const filteredTeachers = teachers.filter((teacher) =>
     teacher.nom.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredTeachers.length / itemsPerPage);
   const paginatedTeachers = filteredTeachers.slice(
     (currentPage - 1) * itemsPerPage,
@@ -42,27 +40,21 @@ function ListTeacher() {
   };
 
   return (
-    <div style={{ direction: "rtl" }}>
-      <div>
-        <h1>قائمة الأساتذة</h1>
-        <hr />
-        <a
-          href="/List/Newteacher"
-          type="button"
-          className="btn btn-primary"
-          style={{ position: "absolute", left: "0" }}
-        >
-          اضافة أستاذ
-        </a>
-        <div style={{ marginTop: "100px" }}>
+    <div className="container mt-4" style={{ direction: "rtl" }}>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="text-primary">قائمة الأساتذة</h1>
+        <a href="/List/Newteacher" className="btn btn-success">إضافة أستاذ</a>
+      </div>
+      <div className="card shadow-sm">
+        <div className="card-body">
           <input
             type="text"
+            className="form-control mb-3"
             placeholder="ابحث باسم الأستاذ"
             value={searchQuery}
             onChange={handleSearchChange}
-            style={{ marginBottom: "20px", width: "100%", padding: "8px" }}
           />
-          <table className="table table-bordered table-striped">
+          <table className="table table-bordered table-hover">
             <thead className="table-primary">
               <tr>
                 <th scope="col">#</th>
@@ -86,25 +78,23 @@ function ListTeacher() {
               ))}
             </tbody>
           </table>
-          <div style={{ marginTop: "20px" }}>
-            <nav aria-label="Page navigation">
-              <ul className="pagination">
-                {[...Array(totalPages).keys()].map((pageNumber) => (
-                  <li
-                    key={pageNumber}
-                    className={`page-item ${pageNumber + 1 === currentPage ? "active" : ""}`}
+          <nav className="d-flex justify-content-center mt-3">
+            <ul className="pagination">
+              {[...Array(totalPages).keys()].map((pageNumber) => (
+                <li
+                  key={pageNumber}
+                  className={`page-item ${pageNumber + 1 === currentPage ? "active" : ""}`}
+                >
+                  <button
+                    className="page-link"
+                    onClick={() => handlePageChange(pageNumber + 1)}
                   >
-                    <button
-                      className="page-link"
-                      onClick={() => handlePageChange(pageNumber + 1)}
-                    >
-                      {pageNumber + 1}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
+                    {pageNumber + 1}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
       </div>
     </div>

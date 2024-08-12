@@ -1,5 +1,4 @@
-// src/App.js
-import React from 'react';
+import React, { useState } from 'react';
 import "./App.css";
 import { Container, Row, Col } from "react-bootstrap";
 import { BrowserRouter as Router, Route, Switch, Redirect } from "react-router-dom";
@@ -15,17 +14,23 @@ import StudentProfiel from "./components/Students/StudentProfiel/StudentProfiel"
 import LoginPage from "../src/components/Login/LoginForm";
 import ClassesList from "./components/Classes/ClassesList/ClassesList";
 import Dashboard from './components/Dashboard/Dashboard';
+
 function App() {
   const isAuthenticated = localStorage.getItem('isAuthenticated');
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+
+  const toggleSidebar = () => {
+    setIsSidebarExpanded(!isSidebarExpanded);
+  };
 
   return (
     <Router>
       <div className="App">
-        {isAuthenticated ? <CustomNavbar /> : null}
+        {isAuthenticated ? <CustomNavbar toggleSidebar={toggleSidebar} /> : null}
         <Container fluid>
           <Row>
             {isAuthenticated && (
-              <Col md={10} className="content">
+              <Col md={isSidebarExpanded ? 10 : 12} className="content">
                 <Switch>
                   <Route path="/List/Std" component={ListStd} />
                   <Route path="/dashboard" component={Dashboard} />
@@ -45,7 +50,11 @@ function App() {
                 <Route path="/Login" exact component={LoginPage} />
               </Col>
             )}
-            {isAuthenticated && <Col md={2}><Sidebar /></Col>}
+            {isAuthenticated && (
+              <Col md={isSidebarExpanded ? 2 : 0} className={`sidebar ${isSidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
+                <Sidebar />
+              </Col>
+            )}
           </Row>
         </Container>
       </div>

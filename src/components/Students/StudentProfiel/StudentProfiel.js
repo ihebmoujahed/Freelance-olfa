@@ -3,7 +3,7 @@ import axios from "axios";
 import ReactPaginate from "react-paginate";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useHistory } from "react-router-dom/cjs/react-router-dom";
-
+import './StudentProfiel.css'
 function StudentProfile() {
   const [student, setStudent] = useState({});
   const [Paymentsstudent, setPaymentsstudent] = useState([]);
@@ -29,12 +29,7 @@ function StudentProfile() {
   const cardid = history.location.state?.id.cardid;
   console.log({ history: history.location });
 
-  // Loading states
-  const [loadingPresence, setLoadingPresence] = useState(false);
-  const [loadingPayments, setLoadingPayments] = useState(false);
-
   const getArchivedPresence = () => {
-    setLoadingPresence(true); // Start loading
     axios
       .get(`http://localhost:3001/archivedpresence/` + id)
       .then((response) => {
@@ -45,14 +40,10 @@ function StudentProfile() {
           "There was an error fetching archived presence data!",
           error
         );
-      })
-      .finally(() => {
-        setLoadingPresence(false); // Stop loading
       });
   };
 
   const getPaymentsstudent = () => {
-    setLoadingPayments(true); // Start loading
     axios
       .get(`http://localhost:3001/getPaymentsstudent/${id}`)
       .then((response) => {
@@ -60,9 +51,6 @@ function StudentProfile() {
       })
       .catch((error) => {
         console.error("There was an error fetching payment data!", error);
-      })
-      .finally(() => {
-        setLoadingPayments(false); // Stop loading
       });
   };
 
@@ -122,21 +110,17 @@ function StudentProfile() {
 
   const handleUpdatePayment = (payment, itemPrice) => {
     const newAmount = itemPrice * payment.attendance_count;
-    console.log(newAmount);
-    console.log(itemPrice);
-    console.log(payment);
-    updatePaymentAmount(payment.id, newAmount); // Use payment.id here
+    updatePaymentAmount(payment.id, newAmount);
   };
 
   const updatePaymentAmount = (id, newAmount) => {
     axios
       .put(`http://localhost:3001/updatePaymentAmount/${id}`, {
         amount: newAmount,
-        id: id, // Ensure the id is passed in the body as well
+        id: id,
       })
       .then((response) => {
         console.log("Payment updated successfully");
-        // Optionally, you can refresh the payment data after update
         getPaymentsstudent();
       })
       .catch((error) => {
@@ -249,38 +233,45 @@ function StudentProfile() {
                 </div>
               </div>
             </form>
-            {loadingPresence ? (
-              <div className="text-center my-4">
-                <span className="spinner-border" role="status" aria-hidden="true"></span>
-                <span className="sr-only">Loading...</span>
-              </div>
-            ) : (
-              <table className="table table-striped table-bordered">
-                <thead>
-                  <tr>
-                    <th>التاريخ</th>
-                    <th>الحالة</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map((item, index) => (
+            <table className="table table-bordered table-hover table-sm">
+              <thead className="table-dark">
+                <tr>
+                  <th>اسم و لقب الاتساذ</th>
+                  <th>التاريخ</th>
+                  <th>الحالة</th>
+                  <th>المادة</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentItems.length > 0 ? (
+                  currentItems.map((item, index) => (
                     <tr key={index}>
+                      <td>
+                        {item.teacher_nom} {item.teacher_prenom}
+                      </td>
                       <td>{formatDate(item.date)}</td>
                       <td>{item.is_present ? "حاضر" : "غائب"}</td>
+                      <td>{item.subject}</td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="text-center">
+                      No data available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
             <ReactPaginate
-              previousLabel={"السابق"}
+              previousLabel={"سابق"}
               nextLabel={"التالي"}
               breakLabel={"..."}
               pageCount={pageCount}
               marginPagesDisplayed={2}
               pageRangeDisplayed={5}
               onPageChange={handlePageClick}
-              containerClassName={"pagination justify-content-center"}
+              containerClassName={"pagination"}
               pageClassName={"page-item"}
               pageLinkClassName={"page-link"}
               previousClassName={"page-item"}
@@ -295,7 +286,7 @@ function StudentProfile() {
 
           {/* Payment Table */}
           <div className="my-5">
-            <h4>- المدفوعات</h4>
+            <h4>- الدفعات</h4>
             <form className="file-upload">
               <div className="row mb-5 gx-5">
                 <div className="col-md-6">
@@ -318,47 +309,54 @@ function StudentProfile() {
                 </div>
               </div>
             </form>
-            {loadingPayments ? (
-              <div className="text-center my-4">
-                <span className="spinner-border" role="status" aria-hidden="true"></span>
-                <span className="sr-only">Loading...</span>
-              </div>
-            ) : (
-              <table className="table table-striped table-bordered">
-                <thead>
+            <table className="table table-bordered table-hover table-sm">
+              <thead className="table-dark">
+                <tr>
+                  <th>التاريخ</th>
+                  <th>المبلغ</th>
+                  <th>عدد الحصص</th>
+                  <th>العمليات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentPaymentItems.length > 0 ? (
+                  currentPaymentItems.map((payment, paymentIndex) => {
+                    const itemPrice = currentItems.length > 0 ? currentItems[0].price : 0;
+
+                    return (
+                      <tr key={paymentIndex}>
+                        <td>{formatDate(payment.payment_date)}</td>
+                        <td>{payment.amount === "0.00" ? "لم يدفع" : payment.amount}</td>
+                        <td>{payment.attendance_count}</td>
+                        <td>
+                          <button
+                            onClick={() => handleUpdatePayment(payment, itemPrice)}
+                            className="btn btn-primary btn-sm"
+                          >
+                            تحديث
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
                   <tr>
-                    <th>تاريخ الدفع</th>
-                    <th>المبلغ</th>
-                    <th>العمليات</th>
+                    <td colSpan="4" className="text-center">
+                      No payment data available
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {currentPaymentItems.map((payment, index) => (
-                    <tr key={index}>
-                      <td>{formatDate(payment.payment_date)}</td>
-                      <td>{payment.amount}</td>
-                      <td>
-                        <button
-                          className="btn btn-primary"
-                          onClick={() => handleUpdatePayment(payment, student.price)}
-                        >
-                          تحديث المبلغ
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                )}
+              </tbody>
+            </table>
             <ReactPaginate
-              previousLabel={"السابق"}
+              previousLabel={"سابق"}
               nextLabel={"التالي"}
               breakLabel={"..."}
               pageCount={paymentPageCount}
               marginPagesDisplayed={2}
               pageRangeDisplayed={5}
               onPageChange={handlePaymentPageClick}
-              containerClassName={"pagination justify-content-center"}
+              containerClassName={"pagination"}
               pageClassName={"page-item"}
               pageLinkClassName={"page-link"}
               previousClassName={"page-item"}

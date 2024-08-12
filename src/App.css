@@ -36,3 +36,13 @@
     transform: rotate(360deg);
   }
 }
+
+@media screen and (min-width: 1600px) {
+  body {
+    /* webkit browsers */
+    zoom: 120%;
+    /* moz browsers , since there is no support to "zoom" */
+    -moz-transform: scale(1.2);
+    -moz-transform-origin: 0 0
+  }
+}

@@ -1,8 +1,11 @@
-import { Container, Row, Col, Modal, Table, Button } from "react-bootstrap";
+import { Container, Row, Col, Modal, Table, Button, Form } from "react-bootstrap";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useHistory } from "react-router-dom"; 
 
 function NewClasse() {
+  const history = useHistory();
+
   const [teachers, setTeachers] = useState([]);
   const [formData, setFormData] = useState({
     groupNumber: "",
@@ -10,7 +13,7 @@ function NewClasse() {
     subject: "",
   });
 
-  const [showModalteacher, setShowModalteacher] = useState(false); // State to control teacher modal visibility
+  const [showModalteacher, setShowModalteacher] = useState(false);
 
   useEffect(() => {
     getTeachers();
@@ -47,6 +50,7 @@ function NewClasse() {
           TeacherName: "",
           subject: "",
         });
+        history.push("/List/Classes"); 
       } else {
         console.error("Failed to insert data");
       }
@@ -61,7 +65,7 @@ function NewClasse() {
       TeacherName: teacher.nom,
       subject: teacher.subject,
     });
-    toggleModalteacher(); // Close the modal after selecting a teacher
+    toggleModalteacher();
   };
 
   const toggleModalteacher = () => {
@@ -70,41 +74,32 @@ function NewClasse() {
 
   return (
     <>
-      <div className="text-center mb-4">
-        <h1 style={{ fontSize: "2.5rem" }}>التسجيل</h1>
-      </div>
-      <hr style={{ margin: "20px 0" }} />
-
-      <Container style={{ direction: "rtl", marginTop: "50px" }}>
+      <Container className="my-5" style={{ direction: "rtl" }}>
         <Row className="justify-content-center">
-          <Col lg={8}>
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label htmlFor="groupNumber" style={{ fontSize: "1.5rem" }}>
-                  اسم المجموعة
-                </label>
-                <input
+          <Col lg={8} md={10} sm={12}>
+            <h1 className="text-center mb-4" style={{ fontSize: "2.5rem", fontWeight: "bold" }}>
+              التسجيل
+            </h1>
+            <hr className="my-4" />
+            <Form onSubmit={handleSubmit} className="p-4 shadow-sm rounded border">
+              <Form.Group controlId="groupNumber" className="mb-4">
+                <Form.Label style={{ fontSize: "1.5rem" }}>اسم المجموعة</Form.Label>
+                <Form.Control
                   type="text"
-                  className="form-control form-control-lg"
-                  id="groupNumber"
-                  placeholder="الاسم"
+                  placeholder="اسم المجموعة"
                   value={formData.groupNumber}
                   onChange={(e) =>
                     setFormData({ ...formData, groupNumber: e.target.value })
                   }
                   style={{ fontSize: "1.2rem" }}
                 />
-              </div>
+              </Form.Group>
 
-              <div className="form-group">
-                <label htmlFor="TeacherName" style={{ fontSize: "1.5rem" }}>
-                  اسم الأستاذ
-                </label>
+              <Form.Group controlId="TeacherName" className="mb-4">
+                <Form.Label style={{ fontSize: "1.5rem" }}>اسم الأستاذ</Form.Label>
                 <div className="input-group">
-                  <input
+                  <Form.Control
                     type="text"
-                    className="form-control form-control-lg"
-                    id="TeacherName"
                     placeholder="اسم الأستاذ"
                     value={formData.TeacherName}
                     onChange={(e) =>
@@ -113,22 +108,20 @@ function NewClasse() {
                     style={{ fontSize: "1.2rem" }}
                     readOnly
                   />
-                  <div className="input-group-append">
-                    <Button variant="primary" onClick={toggleModalteacher} style={{ fontSize: "1.2rem" }}>
-                      عرض الاساتذ
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline-primary"
+                    onClick={toggleModalteacher}
+                    style={{ fontSize: "1.2rem" }}
+                  >
+                    عرض الأساتذة
+                  </Button>
                 </div>
-              </div>
+              </Form.Group>
 
-              <div className="form-group">
-                <label htmlFor="subject" style={{ fontSize: "1.5rem" }}>
-                  المادة
-                </label>
-                <input
+              <Form.Group controlId="subject" className="mb-4">
+                <Form.Label style={{ fontSize: "1.5rem" }}>المادة</Form.Label>
+                <Form.Control
                   type="text"
-                  className="form-control form-control-lg"
-                  id="subject"
                   placeholder="المادة"
                   value={formData.subject}
                   onChange={(e) =>
@@ -136,20 +129,20 @@ function NewClasse() {
                   }
                   style={{ fontSize: "1.2rem" }}
                 />
-              </div>
+              </Form.Group>
 
-              <button
+              <Button
                 type="submit"
-                className="btn btn-primary btn-lg btn-block"
+                variant="primary"
+                className="btn-lg btn-block"
                 style={{ fontSize: "1.5rem" }}
               >
                 تسجيل
-              </button>
-            </form>
+              </Button>
+            </Form>
           </Col>
         </Row>
 
-        {/* Modal Section */}
         <Modal
           show={showModalteacher}
           onHide={toggleModalteacher}
@@ -157,15 +150,15 @@ function NewClasse() {
           dir="rtl"
         >
           <Modal.Header closeButton>
-            <Modal.Title>قائمة الاساتذة</Modal.Title>
+            <Modal.Title>قائمة الأساتذة</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <Table striped bordered hover responsive>
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>اسم الاساتذ(ة)</th>
-                  <th>لقب الاساتذ(ة)</th>
+                  <th>اسم الأستاذ</th>
+                  <th>لقب الأستاذ</th>
                 </tr>
               </thead>
               <tbody>

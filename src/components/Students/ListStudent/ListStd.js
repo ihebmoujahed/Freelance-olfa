@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useHistory, Link,useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function ListStd() {
   const { id } = useParams();
@@ -10,6 +11,7 @@ function ListStd() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
   useEffect(() => {
     axios
       .get("http://localhost:3001/getStudent")
@@ -18,7 +20,7 @@ function ListStd() {
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
-        setStudents([]); 
+        setStudents([]);
       });
   }, []);
 
@@ -28,25 +30,21 @@ function ListStd() {
   };
 
   const getStudentData = (id) => {
-    console.log("112")
     axios
       .get(`http://localhost:3001/getStudentbyId/${id}`)
       .then((response) => {
         const studentData = response.data.rows;
-        console.log({studentData})
-        history.push('/List/StudentProfiel',{id:studentData[0]});
+        history.push('/List/StudentProfiel', { id: studentData[0] });
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
       });
   };
 
-  // Filter students based on the search query
   const filteredStudents = students.filter((student) =>
     student.nom.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
   const paginatedStudents = filteredStudents.slice(
     (currentPage - 1) * itemsPerPage,
@@ -58,27 +56,21 @@ function ListStd() {
   };
 
   return (
-    <div style={{ direction: "rtl" }}>
-      <div>
-        <h1>قائمة التلاميذ</h1>
-        <hr />
-        <a
-          href="/List/Newstd"
-          type="button"
-          className="btn btn-primary"
-          style={{ position: "absolute", left: "0" }}
-        >
-          اضافة تلميذ
-        </a>
-        <div style={{ marginTop: "100px" }}>
+    <div className="container mt-4" style={{ direction: "rtl" }}>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="text-primary">قائمة التلاميذ</h1>
+        <a href="/List/Newstd" className="btn btn-success">إضافة تلميذ</a>
+      </div>
+      <div className="card shadow-sm">
+        <div className="card-body">
           <input
             type="text"
+            className="form-control mb-3"
             placeholder="ابحث باسم التلميذ"
             value={searchQuery}
             onChange={handleSearchChange}
-            style={{ marginBottom: "20px", width: "100%", padding: "8px" }}
           />
-          <table className="table table-bordered table-striped">
+          <table className="table table-bordered table-hover">
             <thead className="table-primary">
               <tr>
                 <th scope="col">#</th>
@@ -94,8 +86,8 @@ function ListStd() {
                   <th scope="row">{(currentPage - 1) * itemsPerPage + index + 1}</th>
                   <td>
                     <button
-                      onClick={() => getStudentData(student.id)} // 
-                      className="btn btn-link"
+                      onClick={() => getStudentData(student.id)}
+                      className="btn btn-link p-0 text-decoration-none text-primary"
                     >
                       {student.nom}
                     </button>
@@ -107,25 +99,23 @@ function ListStd() {
               ))}
             </tbody>
           </table>
-          <div style={{ marginTop: "20px" }}>
-            <nav aria-label="Page navigation">
-              <ul className="pagination">
-                {[...Array(totalPages).keys()].map((pageNumber) => (
-                  <li
-                    key={pageNumber}
-                    className={`page-item ${pageNumber + 1 === currentPage ? "active" : ""}`}
+          <nav className="d-flex justify-content-center">
+            <ul className="pagination">
+              {[...Array(totalPages).keys()].map((pageNumber) => (
+                <li
+                  key={pageNumber}
+                  className={`page-item ${pageNumber + 1 === currentPage ? "active" : ""}`}
+                >
+                  <button
+                    className="page-link"
+                    onClick={() => handlePageChange(pageNumber + 1)}
                   >
-                    <button
-                      className="page-link"
-                      onClick={() => handlePageChange(pageNumber + 1)}
-                    >
-                      {pageNumber + 1}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
+                    {pageNumber + 1}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
       </div>
     </div>

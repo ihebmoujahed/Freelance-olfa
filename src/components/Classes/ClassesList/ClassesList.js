@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
-import { Modal, Button, Form, Alert } from "react-bootstrap";
+import { Modal, Button, Form, Alert, Table } from "react-bootstrap";
 
 function ClassesList() {
   const { id } = useParams();
@@ -9,10 +9,11 @@ function ClassesList() {
   const [studentList, setStudentList] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState([]);
   const [selectedPaymentStudent, setSelectedPaymentStudent] = useState(null);
   const [allStudents, setAllStudents] = useState([]);
   const [currentDate, setCurrentDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState(currentDate);
   const [totalseance, settotalseance] = useState(null);
   const [teacherattendance, setTeacherAttendance] = useState([]);
   const [teacherinfo, setteacherinfo] = useState([]);
@@ -20,6 +21,22 @@ function ClassesList() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertVariant, setAlertVariant] = useState("success");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [studentsPerPage] = useState(10); // Number of students per page
+
+  const filteredStudents = allStudents.filter((student) =>
+    student.nom.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const indexOfLastStudent = currentPage * studentsPerPage;
+  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
+  const currentStudents = filteredStudents.slice(
+    indexOfFirstStudent,
+    indexOfLastStudent
+  );
+
+  const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
 
   const handleAlertClose = () => setShowAlert(false);
 
@@ -113,31 +130,32 @@ function ClassesList() {
   };
   const handleConfirmModalClose = () => setShowConfirmModal(false);
 
-  const handleSelectChange = (e) => {
-    const selectedOption = e.target.options[e.target.selectedIndex];
-    const student = {
-      id: selectedOption.value,
-      nom: selectedOption.getAttribute("data-nom"),
-      prenom: selectedOption.getAttribute("data-prenom"),
-    };
-    setSelectedStudent(student);
+  const handleSelectStudent = (student) => {
+    setSelectedStudent((prevSelected) =>
+      prevSelected.includes(student)
+        ? prevSelected.filter((s) => s !== student)
+        : [...prevSelected, student]
+    );
   };
 
   const handleAddStudent = async () => {
-    if (!selectedStudent) {
-      alert("Please select a student.");
+    if (selectedStudent.length === 0) {
+      alert("Please select at least one student.");
       return;
     }
 
     const { groupnumber } = classInfo;
-    const { id, nom, prenom } = selectedStudent;
 
     try {
-      await axios.post("http://localhost:3001/addClasseStd", {
-        studentId: id,
-        groupNumber: groupnumber,
-        teacherId: classInfo.teacher_id,
-      });
+      await Promise.all(
+        selectedStudent.map((student) =>
+          axios.post("http://localhost:3001/addClasseStd", {
+            studentId: student.id,
+            groupNumber: groupnumber,
+            teacherId: classInfo.teacher_id,
+          })
+        )
+      );
 
       const studentResponse = await axios.get(
         `http://localhost:3001/ClassesList/${classInfo.teacher_id}/${groupnumber}`
@@ -158,11 +176,11 @@ function ClassesList() {
         })
       );
       setStudentList(studentsWithAttendance);
-      setSelectedStudent(null);
+      setSelectedStudent([]);
       handleModalClose();
     } catch (error) {
-      console.error("Error adding student:", error);
-      alert("An error occurred while adding the student.");
+      console.error("Error adding students:", error);
+      alert("An error occurred while adding the students.");
     }
   };
 
@@ -188,7 +206,7 @@ function ClassesList() {
     const attendanceRecords = studentList.map((student) => ({
       student_id: student.id,
       class_id: classInfo.id,
-      date: currentDate,
+      date: selectedDate, // Use selectedDate here
       is_present: student.attendance === "present",
       number_seance: student.attendance === "present" ? 1 : 0,
     }));
@@ -196,10 +214,10 @@ function ClassesList() {
     const teacherAttendanceRecord = {
       teacher_id: classInfo.teacher_id,
       class_id: classInfo.id,
-      date: currentDate,
+      date: selectedDate, // Use selectedDate here
       is_present: studentList.some(
         (student) => student.attendance === "present"
-      ), // True if any student is present
+      ),
       number_seance: studentList.reduce(
         (total, student) => total + (student.attendance === "present" ? 1 : 0),
         0
@@ -213,9 +231,7 @@ function ClassesList() {
         teacherAttendanceRecord
       );
       if (response.data.includes("student attendance archived")) {
-        setAlertMessage(
-          "تم تأكيد تسجيل الحضور بنجاح."
-        );
+        setAlertMessage("تم تأكيد تسجيل الحضور بنجاح.");
       } else {
         setAlertMessage("Attendance submitted successfully.");
       }
@@ -227,13 +243,18 @@ function ClassesList() {
     } finally {
       setShowAlert(true);
     }
+
+    // Check if totalseance is 4 and trigger payment logic for each student
+    if (totalseance === 4) {
+      for (let student of studentList) {
+        await handleNotPayment(student.id, student.number_seance);
+      }
+    }
   };
 
-  const handlePayment = async () => {
-    const { id: studentId, number_seance: numberSeance } =
-      selectedPaymentStudent;
+  const handleNotPayment = async (studentId, numberSeance) => {
     const pricePerSession = teacherinfo[0]?.price || 0;
-    const paymentAmount = pricePerSession * numberSeance;
+    const paymentAmount = pricePerSession * 0; // Zero payment amount
 
     try {
       await axios.post("http://localhost:3001/PaymentStudent", {
@@ -245,6 +266,7 @@ function ClassesList() {
 
       // Display success alert
       setAlertMessage("تم تاكيد دفع التلميذ منجاح.");
+      setAlertVariant("success");
     } catch (error) {
       console.error("Error recording payment:", error);
       // Display error alert
@@ -255,11 +277,12 @@ function ClassesList() {
       setShowAlert(true);
     }
   };
-  const handleNotPayment = async () => {
+
+  const handlePayment = async () => {
     const { id: studentId, number_seance: numberSeance } =
       selectedPaymentStudent;
     const pricePerSession = teacherinfo[0]?.price || 0;
-    const paymentAmount = pricePerSession * 0;
+    const paymentAmount = pricePerSession * numberSeance;
 
     try {
       await axios.post("http://localhost:3001/PaymentStudent", {
@@ -293,149 +316,170 @@ function ClassesList() {
 
   return (
     <div style={{ direction: "rtl" }}>
-        <h1 className="text-center my-4">
-          {classInfo.level} {classInfo.module} - {currentDate} - حصة رقم :{" "}
-          {totalseance}
-        </h1>
-        <hr />
-        <Button
-          variant="primary"
-          onClick={handleModalShow}
-          style={{ position: "absolute", left: "0" }}
-        >
-          اضافة تلميذ(ة)
+      <h1 className="text-center my-4">
+        {classInfo.level} {classInfo.module} - {currentDate} - حصة رقم :{" "}
+        {totalseance}
+      </h1>
+      <hr />
+      <Button
+        variant="primary"
+        onClick={handleModalShow}
+        style={{ position: "absolute", left: "0" }}
+      >
+        اضافة تلميذ(ة)
+      </Button>
+      <div style={{ marginTop: "100px" }}>
+        {showAlert && (
+          <Alert variant={alertVariant} onClose={handleAlertClose} dismissible>
+            <Alert.Heading>
+              {alertVariant === "success" ? "Success" : "Error"}
+            </Alert.Heading>
+            <p className="mb-0">{alertMessage}</p>
+          </Alert>
+        )}
+        <table className="table table-bordered table-striped">
+          <thead className="table-primary">
+            <tr>
+              <th scope="col">الرقم</th>
+              <th scope="col">الاسم</th>
+              <th scope="col">اللقب</th>
+              <th scope="col">تاريخ الحصة</th>
+              <th scope="col">ح</th>
+              <th scope="col">غ</th>
+              <th scope="col">Number of Sessions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {studentList.map((std, index) => (
+              <tr key={std.id}>
+                <th scope="row">{index + 1}</th>
+                <td>{std.studentnom}</td>
+                <td>{std.studentprenom}</td>
+                <td>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                  />
+                </td>
+                <td>
+                  <Form.Check
+                    type="radio"
+                    id={`present-radio-${std.id}`}
+                    name={`attendance-${std.id}`}
+                    checked={std.attendance === "present"}
+                    onChange={() => handleAttendanceChange(std.id, true)}
+                  />
+                </td>
+                <td>
+                  <Form.Check
+                    type="radio"
+                    id={`absent-radio-${std.id}`}
+                    name={`attendance-${std.id}`}
+                    checked={std.attendance === "absent"}
+                    onChange={() => handleAttendanceChange(std.id, false)}
+                  />
+                </td>
+                <td>{std.number_seance}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <Button variant="success" onClick={submitAttendance}>
+          تسجيل الحضور
         </Button>
-        <div style={{ marginTop: "100px" }}>
-          {showAlert && (
-            <Alert
-              variant={alertVariant}
-              onClose={handleAlertClose}
-              dismissible
-            >
-              <Alert.Heading>
-                {alertVariant === "success" ? "Success" : "Error"}
-              </Alert.Heading>
-              <p className="mb-0">{alertMessage}</p>
-            </Alert>
-          )}
-          <table className="table table-bordered table-striped">
-            <thead className="table-primary">
+      </div>
+
+      {/* Modal for adding a student */}
+      <Modal
+        show={showModal}
+        onHide={handleModalClose}
+        style={{ direction: "rtl" }}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>اختيار تلميذ(ة)</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="mb-3">
+            <input
+              type="text"
+              placeholder="بحث بالاسم"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="form-control"
+            />
+          </div>
+          <Table striped bordered hover>
+            <thead>
               <tr>
-                <th scope="col">الرقم</th>
-                <th scope="col">الاسم</th>
-                <th scope="col">اللقب</th>
-                <th scope="col">ح</th>
-                <th scope="col">غ</th>
-                <th scope="col">Number of Sessions</th>
-                <th scope="col">الدفع</th>
+                <th>الاسم</th>
+                <th>اللقب</th>
+                <th>الاختيار</th>
               </tr>
             </thead>
             <tbody>
-              {studentList.map((std, index) => (
-                <tr key={std.id}>
-                  <th scope="row">{index + 1}</th>
-                  <td>{std.studentnom}</td>
-                  <td>{std.studentprenom}</td>
+              {currentStudents.map((student) => (
+                <tr key={student.id}>
+                  <td>{student.nom}</td>
+                  <td>{student.prenom}</td>
                   <td>
-                    <Form.Check
-                      type="radio"
-                      id={`present-radio-${std.id}`}
-                      name={`attendance-${std.id}`}
-                      checked={std.attendance === "present"}
-                      onChange={() => handleAttendanceChange(std.id, true)}
+                    <input
+                      type="checkbox"
+                      onClick={() => handleSelectStudent(student)}
                     />
-                  </td>
-                  <td>
-                    <Form.Check
-                      type="radio"
-                      id={`absent-radio-${std.id}`}
-                      name={`attendance-${std.id}`}
-                      checked={std.attendance === "absent"}
-                      onChange={() => handleAttendanceChange(std.id, false)}
-                    />
-                  </td>
-                  <td>{std.number_seance}</td>
-                  <td>
-                    <Button
-                      variant="primary"
-                      onClick={() => handleConfirmModalShow(std)}
-                      disabled={totalseance !== 4}
-                    >
-                      Pay
-                    </Button>
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
+          <div className="d-flex justify-content-between">
+            <Button
+              variant="secondary"
+              onClick={() =>
+                setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)
+              }
+              disabled={currentPage === 1}
+            >
+              السابق
+            </Button>
+            <span>
+              {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="secondary"
+              onClick={() =>
+                setCurrentPage(
+                  currentPage < totalPages ? currentPage + 1 : totalPages
+                )
+              }
+              disabled={currentPage === totalPages}
+            >
+              التالي
+            </Button>
+          </div>
+        </Modal.Body>
 
-          <Button variant="success" onClick={submitAttendance}>
-            تسجيل الحضور
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleModalClose}>
+            غلق
           </Button>
-        </div>
+          <Button
+            variant="primary"
+            onClick={() => {
+              if (selectedStudent) {
+                handleAddStudent(selectedStudent);
+              }
+            }}
+            disabled={!selectedStudent}
+          >
+            اضافة تلميذ(ة)
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-        {/* Modal for adding a student */}
-        <Modal show={showModal} onHide={handleModalClose}>
-          <Modal.Header closeButton>
-            <Modal.Title>اختيار تلميذ(ة)</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form>
-              <Form.Group controlId="formStudentSelect">
-                <Form.Label>Select Student</Form.Label>
-                <Form.Control
-                  as="select"
-                  value={selectedStudent ? selectedStudent.id : ""}
-                  onChange={handleSelectChange}
-                >
-                  <option value="">Select a student</option>
-                  {allStudents.map((student) => (
-                    <option
-                      key={student.id}
-                      value={student.id}
-                      data-nom={student.nom}
-                      data-prenom={student.prenom}
-                    >
-                      {student.nom} {student.prenom}
-                    </option>
-                  ))}
-                </Form.Control>
-              </Form.Group>
-            </Form>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleModalClose}>
-              غلق
-            </Button>
-            <Button variant="primary" onClick={handleAddStudent}>
-              اضافة تلميذ(ة)
-            </Button>
-          </Modal.Footer>
-        </Modal>
-
-        {/* Confirmation Modal for payment */}
-        <Modal show={showConfirmModal} onHide={handleConfirmModalClose}>
-          <Modal.Header closeButton>
-            <Modal.Title>Confirm Payment</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            التاكد من الدفع for{" "}
-            {selectedPaymentStudent?.studentnom}{" "}
-            {selectedPaymentStudent?.studentprenom}?
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="danger" onClick={handleConfirmModalClose}>
-              الغاء
-            </Button>
-            <Button variant="success " onClick={handlePayment}>
-              الدفع
-            </Button>
-            <Button variant="danger " onClick={handleNotPayment}>
-              لم يقم بعملبة الدفع
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      </div>
+      {/* Confirmation Modal for payment */}
+    </div>
   );
 }
 

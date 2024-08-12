@@ -1,21 +1,25 @@
-import { Container, Row, Col } from "react-bootstrap";
-import { useState } from "react";
-import { useHistory } from "react-router-dom"; // Import useHistory
+import React, { useState } from "react";
+import { useHistory } from "react-router-dom";
+import "./Newteacher.css"; // Import custom CSS
 
 function Newteacher() {
-  const history = useHistory(); // Initialize useHistory hook
-
+  const history = useHistory();
+  
   const [formData, setFormData] = useState({
     nom: '',
     prenom: '',
     numerotlf: '',
     cardid: '',
     subject: '',
-    price:''
+    price: ''
   });
+
+  const [submitSuccess, setSubmitSuccess] = useState(false); // State to track success
+  const [isSubmitting, setIsSubmitting] = useState(false); // State to track submission status
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     try {
       const response = await fetch('http://localhost:3001/addTeacher', {
@@ -28,13 +32,17 @@ function Newteacher() {
 
       if (response.ok) {
         console.log('Data inserted successfully');
-        history.push("/List/Teacher"); 
-
+        setSubmitSuccess(true);
+        setTimeout(() => {
+          history.push("/List/Teacher");
+        }, 2000); // Redirect after 2 seconds
       } else {
         console.error('Failed to insert data');
       }
     } catch (error) {
       console.error('Error inserting data:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -44,37 +52,54 @@ function Newteacher() {
       [e.target.id]: e.target.value,
     });
   };
+
   return (
-    <div style={{ direction: 'rtl' }}>
+    <div className="newteacher-container">
+      {submitSuccess && (
+        <div className="alert alert-success" role="alert">
+          <svg
+            className="bi flex-shrink-0 me-2"
+            width="24"
+            height="24"
+            role="img"
+            aria-label="Success:"
+          >
+            <use xlinkHref="#check-circle-fill" />
+          </svg>
+          <div>تم إضافة البيانات بنجاح</div>
+        </div>
+      )}
+      
       <h1>التسجيل</h1>
-      <hr />
+      <hr className="divider" />
+      
       <form onSubmit={handleSubmit}>
-        <div className="form-row">
-          <div className="form-group col-md-6">
-            <label htmlFor="inputName">الاسم</label>
-            <input
-              type="text"
-              className="form-control"
-              id="nom"
-              placeholder="الاسم"
-              value={formData.nom}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group col-md-6">
-            <label htmlFor="inputLastName">اللقب</label>
-            <input
-              type="text"
-              className="form-control"
-              id="prenom"
-              placeholder="اللقب"
-              value={formData.prenom}
-              onChange={handleChange}
-            />
-          </div>
+        <div className="form-group">
+          <label htmlFor="nom">الاسم</label>
+          <input
+            type="text"
+            className="form-control"
+            id="nom"
+            placeholder="الاسم"
+            value={formData.nom}
+            onChange={handleChange}
+            required
+          />
         </div>
         <div className="form-group">
-          <label htmlFor="inputPhone">الهاتف</label>
+          <label htmlFor="prenom">اللقب</label>
+          <input
+            type="text"
+            className="form-control"
+            id="prenom"
+            placeholder="اللقب"
+            value={formData.prenom}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="numerotlf">الهاتف</label>
           <input
             type="number"
             className="form-control"
@@ -82,10 +107,11 @@ function Newteacher() {
             placeholder="الهاتف"
             value={formData.numerotlf}
             onChange={handleChange}
+            required
           />
         </div>
         <div className="form-group">
-          <label htmlFor="inputCardId">رقم البطاقة الوطنية</label>
+          <label htmlFor="cardid">رقم البطاقة الوطنية</label>
           <input
             type="text"
             className="form-control"
@@ -93,10 +119,11 @@ function Newteacher() {
             placeholder="رقم البطاقة الوطنية"
             value={formData.cardid}
             onChange={handleChange}
+            required
           />
         </div>
         <div className="form-group">
-          <label htmlFor="inputCardId">المادة</label>
+          <label htmlFor="subject">المادة</label>
           <input
             type="text"
             className="form-control"
@@ -104,24 +131,31 @@ function Newteacher() {
             placeholder="المادة"
             value={formData.subject}
             onChange={handleChange}
+            required
           />
         </div>
         <div className="form-group">
-          <label htmlFor="inputprice">الثمن(الحصة)</label>
+          <label htmlFor="price">الثمن (الحصة)</label>
           <input
             type="text"
             className="form-control"
             id="price"
-            placeholder="الثمن(الحصة)"
+            placeholder="الثمن (الحصة)"
             value={formData.price}
             onChange={handleChange}
+            required
           />
         </div>
-
-        <button type="submit" className="btn btn-primary" style={{marginTop:"22px"}}>
-          تسجيل
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'جاري التسجيل...' : 'تسجيل'}
         </button>
       </form>
     </div>
-  );}
+  );
+}
+
 export default Newteacher;

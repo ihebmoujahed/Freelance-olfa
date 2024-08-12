@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Card, Table, Row, Col, Form, Pagination } from "react-bootstrap";
+import "./Dashboard.css"; // Import your custom CSS
 
 const Dashboard = () => {
   const [studentCount, setStudentCount] = useState(0);
@@ -98,37 +99,38 @@ const Dashboard = () => {
   );
 
   return (
-    <div style={{ direction: "rtl" }}>
+    <div className="dashboard-container" style={{ direction: "rtl" }}>
       <Row className="mb-4">
         <Col sm={12} md={4}>
-          <Card>
+          <Card className="dashboard-card card-student">
             <Card.Body>
-              <Card.Title>إجمالي الطلاب</Card.Title>
-              <Card.Text>{studentCount}</Card.Text>
+              <Card.Title className="dashboard-card-title">إجمالي الطلاب</Card.Title>
+              <Card.Text className="dashboard-card-text">{studentCount}</Card.Text>
             </Card.Body>
           </Card>
         </Col>
         <Col sm={12} md={4}>
-          <Card>
+          <Card className="dashboard-card card-teacher">
             <Card.Body>
-              <Card.Title>إجمالي المعلمين</Card.Title>
-              <Card.Text>{teacherCount}</Card.Text>
+              <Card.Title className="dashboard-card-title">إجمالي المعلمين</Card.Title>
+              <Card.Text className="dashboard-card-text">{teacherCount}</Card.Text>
             </Card.Body>
           </Card>
         </Col>
         <Col sm={12} md={4}>
-          <Card>
+          <Card className="dashboard-card card-payment">
             <Card.Body>
-              <Card.Title>إجمالي المدفوعات</Card.Title>
-              <Card.Text>${paymentTotal.toFixed(2)}</Card.Text>
+              <Card.Title className="dashboard-card-title">إجمالي المدفوعات</Card.Title>
+              <Card.Text className="dashboard-card-text">${paymentTotal.toFixed(2)}</Card.Text>
             </Card.Body>
           </Card>
         </Col>
       </Row>
+
       <Row className="mb-4">
         <Col>
-          <Card>
-            <Card.Header>جميع الطلاب</Card.Header>
+          <Card className="dashboard-card">
+            <Card.Header className="section-header">جميع الطلاب</Card.Header>
             <Card.Body>
               <Form.Group controlId="studentSearch">
                 <Form.Control
@@ -136,11 +138,12 @@ const Dashboard = () => {
                   placeholder="البحث بالاسم"
                   value={studentSearch}
                   onChange={(e) => setStudentSearch(e.target.value)}
+                  className="form-control-custom"
                 />
               </Form.Group>
               {currentStudentData.length > 0 ? (
                 <>
-                  <Table striped bordered hover className="mt-3">
+                  <Table striped bordered hover className="table-custom mt-3">
                     <thead>
                       <tr>
                         <th>الرقم</th>
@@ -160,7 +163,7 @@ const Dashboard = () => {
                       ))}
                     </tbody>
                   </Table>
-                  <Pagination className="mt-3">
+                  <Pagination className="pagination-custom mt-3">
                     {Array.from({ length: totalStudentPages }, (_, index) => (
                       <Pagination.Item
                         key={index + 1}
@@ -179,10 +182,11 @@ const Dashboard = () => {
           </Card>
         </Col>
       </Row>
+
       <Row>
         <Col>
-          <Card>
-            <Card.Header>جميع المعلمين</Card.Header>
+          <Card className="dashboard-card">
+            <Card.Header className="section-header">جميع المعلمين</Card.Header>
             <Card.Body>
               <Form.Group controlId="teacherSearch">
                 <Form.Control
@@ -190,11 +194,12 @@ const Dashboard = () => {
                   placeholder="البحث بالاسم"
                   value={teacherSearch}
                   onChange={(e) => setTeacherSearch(e.target.value)}
+                  className="form-control-custom"
                 />
               </Form.Group>
               {currentTeacherData.length > 0 ? (
                 <>
-                  <Table striped bordered hover className="mt-3">
+                  <Table striped bordered hover className="table-custom mt-3">
                     <thead>
                       <tr>
                         <th>الرقم</th>
@@ -218,7 +223,7 @@ const Dashboard = () => {
                       ))}
                     </tbody>
                   </Table>
-                  <Pagination className="mt-3">
+                  <Pagination className="pagination-custom mt-3">
                     {Array.from({ length: totalTeacherPages }, (_, index) => (
                       <Pagination.Item
                         key={index + 1}

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Navbar, Nav, Button, Offcanvas } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
+import { FaHome, FaChalkboardTeacher, FaUserGraduate, FaCogs, FaSignOutAlt, FaBook } from "react-icons/fa";
 
 function CustomNavbar() {
   const [show, setShow] = useState(false);
@@ -15,54 +16,73 @@ function CustomNavbar() {
   const handleShow = () => setShow(true);
 
   return (
-    <Navbar bg="primary" variant="dark" style={{ direction: "rtl", position: "relative" }}>
-      <Button 
-        className="d-md-none" 
-        variant="primary" 
-        onClick={handleShow} 
+    <Navbar
+      bg="primary"
+      variant="dark"
+      expand="lg"
+      className="py-3 shadow-sm"
+      style={{ direction: "rtl", position: "relative" }}
+    >
+      <Button
+        className="d-md-none"
+        variant="outline-light"
+        onClick={handleShow}
         style={{
-          position: "absolute", 
-          top: "10px", 
-          left: "10px", 
-          zIndex: 1 // Ensure it is above other content
+          position: "absolute",
+          top: "10px",
+          left: "10px",
+          zIndex: 1,
         }}
       >
         ☰
       </Button>
-      <Navbar.Brand href="#home">فضاء الجنوب</Navbar.Brand>
-
+      <Navbar.Brand href="#home" className="mx-auto font-weight-bold">
+        فضاء الجنوب
+      </Navbar.Brand>
       <Offcanvas show={show} onHide={handleClose} placement="start">
-        <Offcanvas.Header closeButton>
+        <Offcanvas.Header closeButton className="bg-primary text-white">
           <Offcanvas.Title>Menu</Offcanvas.Title>
         </Offcanvas.Header>
-        <Offcanvas.Body>
+        <Offcanvas.Body className="bg-light">
           <Nav className="flex-column">
-            <Nav.Item>
-              <Nav.Link href="#home">الصفحة الرئيسية</Nav.Link>
+            <Nav.Item className="my-2">
+              <Nav.Link href="#home" className="text-primary">
+                <FaHome className="me-2" /> الصفحة الرئيسية
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item className="my-2">
+              <Nav.Link href="#dashboard" className="text-primary">
+                <FaHome className="me-2" /> الرئيسية
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item className="my-2">
+              <Nav.Link href="/List/Classes" className="text-primary">
+                <FaBook className="me-2" /> الأقسام
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item className="my-2">
+              <Nav.Link href="/List/Std" className="text-primary">
+                <FaUserGraduate className="me-2" /> التلاميذ
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item className="my-2">
+              <Nav.Link href="/List/Teacher" className="text-primary">
+                <FaChalkboardTeacher className="me-2" /> الأساتذة
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item className="my-2">
+              <Nav.Link href="/List/Settings" className="text-primary">
+                <FaCogs className="me-2" /> الإعدادات
+              </Nav.Link>
             </Nav.Item>
             <hr />
-            <Nav.Item>
-              <Nav.Link href="#dashboard">الرئيسية</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link href="/List/Classes">الأقسام</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link href="/List/Std">التلاميذ</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link href="/List/Teacher">الأساتذة</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link href="/List/Std">الإعدادات</Nav.Link>
-            </Nav.Item>
-            <hr />
-            <Nav.Item>
+            <Nav.Item className="my-2">
               <Nav.Link
                 onClick={handleLogout}
-                style={{ cursor: "pointer", color: "red" }}
+                className="text-danger"
+                style={{ cursor: "pointer" }}
               >
-                تسجيل الخروج
+                <FaSignOutAlt className="me-2" /> تسجيل الخروج
               </Nav.Link>
             </Nav.Item>
           </Nav>
